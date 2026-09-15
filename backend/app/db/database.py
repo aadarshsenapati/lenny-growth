@@ -5,6 +5,33 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import get_settings
 
+
+def _patch_aiomysql_ping() -> None:
+    """Workaround for a SQLAlchemy 2.0.35 + aiomysql 0.2.0 incompatibility:
+    SQLAlchemy's do_ping() calls dbapi_connection.ping() with no arguments,
+    but aiomysql's async connection wrapper requires `reconnect` to be
+    passed explicitly, raising:
+    "AsyncAdapt_aiomysql_connection.ping() missing 1 required positional
+    argument: 'reconnect'" on every connection checkout. This patches the
+    method to default `reconnect=True` when called with no args, which
+    also lets pool_pre_ping actually work for MySQL."""
+    try:
+        from sqlalchemy.dialects.mysql.aiomysql import AsyncAdapt_aiomysql_connection
+
+        original_ping = AsyncAdapt_aiomysql_connection.ping
+
+        def patched_ping(self, *args, **kwargs):
+            if not args and "reconnect" not in kwargs:
+                kwargs["reconnect"] = True
+            return original_ping(self, *args, **kwargs)
+
+        AsyncAdapt_aiomysql_connection.ping = patched_ping
+    except ImportError:
+        pass
+
+
+_patch_aiomysql_ping()
+
 settings = get_settings()
 
 # pool_pre_ping guards against MySQL closing idle connections underneath us
@@ -17,20 +44,13 @@ settings = get_settings()
 # them, so they're applied conditionally.
 _engine_kwargs = {"echo": False}
 if not settings.database_url.startswith("sqlite"):
-    # pool_pre_ping is intentionally OFF for MySQL: SQLAlchemy 2.0.35's
-    # pre-ping calls dbapi_connection.ping() with no arguments, but this
-    # aiomysql version's connection wrapper requires `reconnect` to be
-    # passed explicitly, raising
-    # "AsyncAdapt_aiomysql_connection.ping() missing 1 required positional
-    # argument: 'reconnect'" on every single connection checkout. This is a
-    # known SQLAlchemy/aiomysql version-compatibility bug, not application
-    # code. pool_recycle below is the mitigation instead: it proactively
-    # replaces connections before MySQL's wait_timeout would kill them, so
-    # we don't strictly need pre_ping to catch already-dead connections.
+    # pool_pre_ping is safe now that _patch_aiomysql_ping() above fixes the
+    # aiomysql ping() signature mismatch (see that function's docstring).
     _engine_kwargs.update(
         pool_size=5,
         max_overflow=5,
         pool_recycle=1800,
+        pool_pre_ping=True,
         connect_args={"charset": "utf8mb4"},
     )
 else:

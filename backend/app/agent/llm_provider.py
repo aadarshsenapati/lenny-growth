@@ -15,7 +15,7 @@ import time
 from typing import Protocol
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_not_exception_type, stop_after_attempt, wait_exponential
 
 from app.config import get_settings
 from app.core.exceptions import LLMProviderUnavailableError, LLMTimeoutError
@@ -48,10 +48,15 @@ class GroqClient:
 
             self._client = AsyncGroq(api_key=self.api_key)
 
-    @retry(stop=stop_after_attempt(2), wait=wait_exponential(multiplier=0.5, min=0.5, max=2))
+    @retry(
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(multiplier=0.5, min=0.5, max=2),
+        retry=retry_if_not_exception_type(LLMProviderUnavailableError),
+    )
     async def complete(self, system: str, messages: list[dict], temperature: float = 0.3) -> LLMResult:
         if not self._client:
             raise LLMProviderUnavailableError("GROQ_API_KEY is not configured.")
+
         start = time.perf_counter()
         try:
             resp = await self._client.chat.completions.create(
@@ -63,6 +68,7 @@ class GroqClient:
         except Exception as exc:  # noqa: BLE001 - normalize all SDK errors
             log.error("groq_call_failed", error=str(exc))
             raise LLMProviderUnavailableError(f"Groq request failed: {exc}") from exc
+
         latency_ms = int((time.perf_counter() - start) * 1000)
         text = resp.choices[0].message.content or ""
         return LLMResult(text=text, provider="groq", model=self.model, latency_ms=latency_ms)

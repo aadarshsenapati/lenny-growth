@@ -4,6 +4,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from tenacity import RetryError
+
 from app.api import routes_artifacts, routes_chat, routes_health, routes_sessions
 from app.config import get_settings
 from app.core.exceptions import AppError
@@ -45,6 +47,17 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
         content={"error": exc.code, "detail": exc.detail, "code": exc.code},
     )
 
+
+@app.exception_handler(RetryError)
+async def retry_error_handler(request: Request, exc: RetryError) -> JSONResponse:
+    inner = exc.last_attempt.exception()
+    if isinstance(inner, AppError):
+        return await app_error_handler(request, inner)
+    log.error("unhandled_retry_error", error=str(inner), path=str(request.url))
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_error", "detail": str(inner), "code": "internal_error"},
+    )
 
 @app.exception_handler(Exception)
 async def unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
