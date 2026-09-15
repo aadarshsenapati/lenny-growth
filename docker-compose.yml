@@ -1,0 +1,77 @@
+version: "3.9"
+
+# One-command startup: `docker compose up --build`
+#
+# Two ways to point at MySQL, depending on your setup:
+#
+# 1. You already run MySQL locally (e.g. via MySQL Workbench) on your host
+#    machine, port 3306 -- this is the default assumption here. Because the
+#    backend runs *inside* a container, "localhost" inside that container is
+#    NOT your host machine. Use DATABASE_URL=mysql+aiomysql://user:pass@host.docker.internal:3306/<db>
+#    (host.docker.internal works out of the box on Docker Desktop for
+#    Mac/Windows; on Linux, add `extra_hosts: ["host.docker.internal:host-gateway"]`
+#    to the backend service below, already included).
+#
+# 2. You'd rather not depend on your host's MySQL install at all -- uncomment
+#    the `db` service below for a fully containerized MySQL instead, and set
+#    DATABASE_URL=mysql+aiomysql://root:password@db:3306/lenny_growth_assistant
+#    (host is the Compose service name `db`, not localhost or
+#    host.docker.internal, since both containers share the Compose network).
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # lets the container reach a MySQL server running on your host (Linux); no-op on Docker Desktop
+    depends_on:
+      - ollama
+      # - db  # uncomment if you also uncommented the `db` service below, so backend waits for MySQL to be ready
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    # Pull the model on first run with:
+    #   docker compose exec ollama ollama pull llama3.1:8b
+
+  # Uncomment for a fully containerized MySQL instead of your host install:
+  # db:
+  #   image: mysql:8.0
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: password
+  #     MYSQL_DATABASE: lenny_growth_assistant
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  ollama_data:
+  # mysql_data:

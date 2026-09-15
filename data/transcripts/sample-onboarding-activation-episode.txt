@@ -1,0 +1,34 @@
+[SAMPLE TRANSCRIPT - FICTIONAL, FOR DEMO/TESTING PURPOSES ONLY]
+[This is a placeholder standing in for a real Lenny's Podcast transcript.
+Replace this file with real transcripts before using this for actual product decisions.]
+
+Episode: Sample Episode - Fixing Onboarding and Activation
+
+Host: Let's talk activation. How do you define it?
+
+Guest: Activation is the first moment a new user experiences the core value
+of the product, not just the first login. Teams often conflate "signed up"
+with "activated," which hides a huge amount of drop-off in between.
+
+Host: How do you find the right activation metric?
+
+Guest: Look at retained users from six months ago and work backward: what
+action did nearly all of them take in their first session that non-retained
+users didn't take? That action, done within a specific time window, is your
+activation event. It's an empirical exercise, not something you guess from a
+whiteboard.
+
+Host: What's a common onboarding mistake?
+
+Guest: Front-loading configuration before the user has seen any value. Asking
+someone to set up integrations, invite teammates, and customize settings
+before they've experienced a single "aha moment" kills momentum. Get them to
+value first, then ask for the setup work once they're bought in.
+
+Host: How do you balance activation speed with import quality, like when a
+user needs to connect real data?
+
+Guest: Offer a sample-data path alongside the real-data path. Let users
+explore with realistic sample data immediately, and let real data import run
+in the background or as a secondary step. That way time-to-value isn't
+gated on a slow or error-prone import process.

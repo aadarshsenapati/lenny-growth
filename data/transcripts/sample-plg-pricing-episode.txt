@@ -1,0 +1,36 @@
+[SAMPLE TRANSCRIPT - FICTIONAL, FOR DEMO/TESTING PURPOSES ONLY]
+[This is a placeholder standing in for a real Lenny's Podcast transcript.
+Replace this file with real transcripts before using this for actual product decisions.]
+
+Episode: Sample Episode - Pricing Product-Led Growth Products
+
+Host: Today we're talking about pricing strategy for product-led growth (PLG)
+companies. What's the biggest mistake you see teams make?
+
+Guest: The most common mistake is pricing based on what competitors charge
+instead of pricing based on the value delivered to a specific user segment.
+Teams copy a competitor's tiered pricing page without understanding why that
+structure exists for the competitor's business model.
+
+Host: How should a team think about their first pricing page instead?
+
+Guest: Start by identifying your core value metric -- the thing that scales
+with the value a customer gets, like seats, usage volume, or API calls. Then
+build tiers around natural upgrade triggers tied to that metric, not around
+arbitrary feature bundling. A generous free tier is a growth lever, not a
+cost center, as long as the value metric creates a believable upgrade path.
+
+Host: When should a team introduce usage-based pricing?
+
+Guest: Usage-based pricing works best when the product has a metered resource
+that customers can directly observe and control, and when adoption is
+land-and-expand rather than a single big purchase decision. It's risky to
+introduce too early, before you understand your own cost structure, because
+you can end up subsidizing your heaviest users.
+
+Host: Any advice on communicating a pricing change to existing users?
+
+Guest: Grandfather existing customers wherever possible, over-communicate the
+"why" behind the change in terms of value delivered, and give at least 30-60
+days notice. Pricing changes that feel like a bait-and-switch are one of the
+fastest ways to spike churn and hurt word-of-mouth growth.
